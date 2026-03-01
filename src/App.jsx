@@ -11,6 +11,7 @@ import Pagination2 from "./components/Pagination2";
 import InfiniteScroll from "./components/InfiniteScroll";
 import Form from "./components/From";
 import Modal from "./components/Modal";
+import { AchievementToasterSub } from "./components/AchievementToasterSub";
 
 const Demo = () => {
   const { addAchievement } = useAchievementToaster();
@@ -41,7 +42,8 @@ function App() {
     // <Pagination2/>
     // <InfiniteScroll/>
     // <Form/>
-    <Modal/>
+    // <Modal/>
+    <AchievementToasterSub/>
   );
 }
 
