@@ -34,16 +34,16 @@ const Demo = () => {
 
 function App() {
   return (
-    // <AchievementToasterProvider>
-    //   <Demo />
-    // </AchievementToasterProvider>
+    <AchievementToasterProvider>
+      <Demo />
+    </AchievementToasterProvider>
     // <AbortSearch/>
     // <Search/>
     // <Pagination2/>
     // <InfiniteScroll/>
     // <Form/>
     // <Modal/>
-    <AchievementToasterSub/>
+    // <AchievementToasterSub/>
   );
 }
 
