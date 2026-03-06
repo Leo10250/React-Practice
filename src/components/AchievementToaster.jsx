@@ -82,7 +82,7 @@ export const AchievementToasterProvider = ({
             key={i.id}
             achievement={i}
             autoDismissMs={autoDismissMs}
-            onClose={() => dismiss(i.id)}
+            onClose={dismiss}
           />
         ))}
       </div>
@@ -92,9 +92,9 @@ export const AchievementToasterProvider = ({
 
 export const ToastCard = ({ achievement, autoDismissMs, onClose }) => {
   useEffect(() => {
-    const timerID = setTimeout(onClose, autoDismissMs);
+    const timerID = setTimeout(() => onClose(achievement.id), autoDismissMs);
     return () => clearTimeout(timerID);
-  }, [onClose, autoDismissMs]);
+  }, [onClose, autoDismissMs, achievement.id]);
 
   return (
     <div
@@ -114,7 +114,7 @@ export const ToastCard = ({ achievement, autoDismissMs, onClose }) => {
         <div style={{ fontSize: 12, opacity: 0.7, fontWeight: 700 }}>
           {(achievement.rarity ?? "common").toUpperCase()}
         </div>
-        <button onClick={onClose}>X</button>
+        <button onClick={() => onClose(achievement.id)}>X</button>
       </div>
     </div>
   );
