@@ -10,6 +10,7 @@ import {
 
 const ToastCtx = createContext(null);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAchievementToaster = () => {
     const ctx = useContext(ToastCtx);
 
