@@ -26,7 +26,7 @@ function useLocalStorage<T>(
     return [value, setValue];
 }
 
-function SettingsPanel() {
+export function SettingsPanel() {
     const [username, setUsername] = useLocalStorage("username", "");
     const [darkMode, setDarkMode] = useLocalStorage("darkMode", false);
 
@@ -68,8 +68,4 @@ function SettingsPanel() {
             </div>
         </div>
     );
-}
-
-export default function App() {
-    return <SettingsPanel />;
 }
