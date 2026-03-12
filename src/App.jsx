@@ -12,6 +12,7 @@ import Form from "./components/From";
 import Modal from "./components/Modal";
 import { AchievementToasterSub } from "./components/AchievementToasterSub";
 import TrophySearch from "./components/TrophySearch";
+import GameListByPlatform from "./components/GameListByPlatform";
 
 const data = [
   { id: 1, title: "First Blood", points: 15, earned: true },
@@ -51,7 +52,8 @@ function App() {
         // <Form />
         // <Modal/>
         // <AchievementToasterSub/>
-        <TrophySearch data={data} />
+        // <TrophySearch data={data} />
+        <GameListByPlatform/>
     );
 }
 
