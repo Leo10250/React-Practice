@@ -52,8 +52,8 @@ function App() {
         // <Form />
         // <Modal/>
         // <AchievementToasterSub/>
-        // <TrophySearch data={data} />
-        <GameListByPlatform/>
+        <TrophySearch data={data} />
+        // <GameListByPlatform/>
     );
 }
 
