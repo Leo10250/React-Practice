@@ -74,14 +74,15 @@ function subscribeToAchievements(onAchievement) {
 const MAX_VISIBLE = 3;
 const AUTO_DISMISS_MS = 4000;
 
-function ToastCard({ toast, onClose, dismissMS }) {
+function ToastCard({ toast, onClose, dismissMs }) {
     useEffect(() => {
-        const timerId = setTimeout(() => onClose(toast.id), dismissMS);
+        const timerId = setTimeout(() => onClose(toast.id), dismissMs);
         return () => clearTimeout(timerId);
-    }, [onClose, dismissMS, toast.id]);
+    }, [onClose, dismissMs, toast.id]);
 
     return (
         <div
+            role="status"
             style={{
                 position: "relative",
                 backgroundColor: "white",
@@ -91,6 +92,8 @@ function ToastCard({ toast, onClose, dismissMS }) {
                 justifyContent: "center",
                 alignItems: "center",
                 flexDirection: "column",
+                padding: 12,
+                marginBottom: 8,
             }}
         >
             <div>{toast.title}</div>
@@ -107,52 +110,28 @@ function ToastCard({ toast, onClose, dismissMS }) {
 }
 
 export function AchievementToasterSub() {
-    const [achievements, setAchievements] = useState({
-        visible: [],
-        pending: [],
-    });
+    const [queue, setQueue] = useState([]);
+    const visible = queue.slice(0, MAX_VISIBLE);
 
-    // TODO: subscribe on mount, unsubscribe on unmount
     useEffect(() => {
         const unsubscribe = subscribeToAchievements((achievement) => {
-            setAchievements(({ visible, pending }) => {
-                if (visible.length < MAX_VISIBLE) {
-                    return {
-                        visible: [...visible, achievement],
-                        pending: pending,
-                    };
-                }
-                return { pending: [...pending, achievement], visible: visible };
-            });
+            setQueue((curr) => [...curr, achievement]);
         });
-
-        return () => {
-            unsubscribe();
-        };
+        return () => unsubscribe();
     }, []);
 
-    // TODO: implement dismiss + queue promotion
     const dismiss = useCallback((id) => {
-        setAchievements(({ visible, pending }) => {
-            const newVisible = visible.filter((item) => item.id !== id);
-            let newPending = pending;
-            if (pending.length > 0) {
-                const [upcomingVisible, ...rest] = pending;
-                newPending = rest;
-                newVisible.push(upcomingVisible);
-            }
-            return { visible: newVisible, pending: newPending };
-        });
+        setQueue((curr) => curr.filter((item) => item.id !== id));
     }, []);
 
     return (
         <div style={{ position: "fixed", top: 16, right: 16 }}>
-            {achievements.visible.map((item) => (
+            {visible.map((item) => (
                 <ToastCard
                     key={item.id}
                     toast={item}
                     onClose={dismiss}
-                    dismissMS={AUTO_DISMISS_MS}
+                    dismissMs={AUTO_DISMISS_MS}
                 />
             ))}
         </div>
