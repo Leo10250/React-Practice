@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 
 // TODO: implement this hook
 function usePrevious(value) {
-    const ref = useRef();
+    const ref = useRef(null);
 
     useEffect(() => {
         ref.current = value;

@@ -25,17 +25,6 @@ const GameListByPlatform = () => {
     };
 
     return (
-        // <AchievementToasterProvider>
-        //   <Demo />
-        // </AchievementToasterProvider>
-        // <AbortSearch/>
-        // <Search/>
-        // <Pagination2/>
-        // <InfiniteScroll/>
-        // <Form />
-        // <Modal/>
-        // <AchievementToasterSub/>
-        // <TrophySearch data={data} />
         <>
             {platforms.map((platform) => (
                 <button

@@ -1,114 +1,89 @@
 import { useEffect, useRef, useState } from "react";
 
+const PAGE_SIZES = [10, 20, 30];
+
 const Pagination = () => {
-    const [selectedPageSize, setSelectedPageSize] = useState(10);
-    const [currPageNum, setCurrPageNum] = useState(1);
-    const [totalPageNum, setTotalPageNum] = useState(1);
-    const [currPageProducts, setcurrPageProducts] = useState([]);
-    const [prefech, setPrefech] = useState({
-        pageNum: currPageNum + 1,
-        pageSize: selectedPageSize,
-        products: [],
-    });
-    const requestId = useRef({ currPage: 0, nextPage: 0 });
+    const [pageSize, setPageSize] = useState(10);
+    const [currPage, setCurrPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [products, setProducts] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-
-    const fetchCurrPage = async (abortController, limit, currPage) => {
-        requestId.current.currPage++;
-        const currRequestId = requestId.current.currPage;
-        setIsLoading(true);
-        const numToSkip = (currPage - 1) * limit;
-        const url = `https://dummyjson.com/products?limit=${limit}&skip=${numToSkip}`;
-        try {
-            const res = await fetch(url, {
-                signal: abortController.signal,
-            });
-            if (!res.ok) {
-                setIsLoading(false);
-                throw new Error(`Pretching HTTP ${res.status}`);
-            }
-            const data = await res.json();
-            if (currRequestId !== requestId.current.currPage) {
-                setIsLoading(false);
-                return;
-            }
-            console.log(data);
-            const currPage = data.products;
-            const maxPageNum = Math.ceil(data.total / limit);
-            console.log(currPage);
-            setcurrPageProducts(currPage);
-            setCurrPageNum((prev) => Math.min(maxPageNum, prev));
-            setTotalPageNum(maxPageNum);
-        } catch (error) {
-            if (error.name === "AbortError") {
-                setIsLoading(false);
-                return;
-            }
-            console.error(`Fetching Failed`);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const prefetchNextPage = async (abortController, limit, currPage) => {
-        requestId.current.nextPage++;
-        const currRequestId = requestId.current.nextPage;
-        const numToSkip = currPage * limit;
-        const url = `https://dummyjson.com/products?limit=${limit}&skip=${numToSkip}`;
-        try {
-            const res = await fetch(url, {
-                signal: abortController.signal,
-            });
-            if (!res.ok) {
-                throw new Error(`Prefetching HTTP ${res.status}`);
-            }
-            const data = await res.json();
-            if (currRequestId !== requestId.current.nextPage) {
-                return;
-            }
-            const nextPage = data.products;
-            setPrefech({
-                pageNum: currPage + 1,
-                pageSize: limit,
-                products: nextPage,
-            });
-        } catch (error) {
-            if (error.name === "AbortError") {
-                return;
-            }
-            console.error(`Prefetching Failed`);
-        }
-    };
+    const prefetchCache = useRef({ pageNum: 0, pageSize: 0, products: [] });
+    const requestId = useRef({ currPage: 0, nextPage: 0 });
 
     useEffect(() => {
-        const abortController = new AbortController();
-        const canPreFectch =
-            prefech.pageNum === currPageNum &&
-            prefech.pageSize === selectedPageSize;
-        if (canPreFectch) {
-            setcurrPageProducts(prefech.products);
-            setPrefech({
-                pageNum: currPageNum + 1,
-                pageSize: selectedPageSize,
-                products: [],
-            });
+        const controller = new AbortController();
+
+        const fetchPage = async (page) => {
+            requestId.current.currPage++;
+            const thisRequestId = requestId.current.currPage;
+
+            setIsLoading(true);
+            const skip = (page - 1) * pageSize;
+            try {
+                const res = await fetch(
+                    `https://dummyjson.com/products?limit=${pageSize}&skip=${skip}`,
+                    { signal: controller.signal },
+                );
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+
+                if (thisRequestId !== requestId.current.currPage) return;
+
+                const maxPages = Math.ceil(data.total / pageSize);
+                setTotalPages(maxPages);
+                setCurrPage((prev) => Math.min(maxPages, prev));
+                setProducts(data.products);
+            } catch (error) {
+                if (error.name === "AbortError") return;
+                console.error("Fetching failed:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        const prefetchNext = async (page) => {
+            requestId.current.nextPage++;
+            const thisRequestId = requestId.current.nextPage;
+
+            const nextPage = page + 1;
+            const skip = page * pageSize;
+            try {
+                const res = await fetch(
+                    `https://dummyjson.com/products?limit=${pageSize}&skip=${skip}`,
+                    { signal: controller.signal },
+                );
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+
+                if (thisRequestId !== requestId.current.nextPage) return;
+
+                prefetchCache.current = {
+                    pageNum: nextPage,
+                    pageSize: pageSize,
+                    products: data.products,
+                };
+            } catch (error) {
+                if (error.name === "AbortError") return;
+                console.error("Prefetching failed:", error);
+            }
+        };
+
+        // Use cache if it matches, otherwise fetch
+        const cache = prefetchCache.current;
+        if (cache.pageNum === currPage && cache.pageSize === pageSize) {
+            setProducts(cache.products);
         } else {
-            fetchCurrPage(abortController, selectedPageSize, currPageNum);
-            console.log("fetch");
+            fetchPage(currPage);
         }
-        if (currPageNum < totalPageNum) {
-            prefetchNextPage(abortController, selectedPageSize, currPageNum);
+
+        // Prefetch the next page
+        if (currPage < totalPages) {
+            prefetchNext(currPage);
         }
-        console.log("finished");
-        return () => abortController.abort();
-    }, [
-        currPageNum,
-        prefech.pageNum,
-        prefech.pageSize,
-        prefech.products,
-        selectedPageSize,
-        totalPageNum,
-    ]);
+
+        return () => controller.abort();
+    }, [currPage, pageSize, totalPages]);
 
     return (
         <div
@@ -119,22 +94,26 @@ const Pagination = () => {
             }}
         >
             <select
-                value={selectedPageSize}
+                value={pageSize}
                 onChange={(e) => {
-                    setSelectedPageSize(Number(e.target.value));
-                    setCurrPageNum(1);
-                    setPrefech({
-                        pageNum: 2,
-                        pageSize: Number(e.target.value),
+                    setPageSize(Number(e.target.value));
+                    setCurrPage(1);
+                    prefetchCache.current = {
+                        pageNum: 0,
+                        pageSize: 0,
                         products: [],
-                    });
+                    };
                 }}
             >
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={30}>30</option>
+                {PAGE_SIZES.map((size) => (
+                    <option key={size} value={size}>
+                        {size}
+                    </option>
+                ))}
             </select>
-            {isLoading && <div>LOADING...</div>}
+
+            {isLoading && <div>Loading...</div>}
+
             <ul
                 style={{
                     listStyle: "none",
@@ -143,25 +122,22 @@ const Pagination = () => {
                     flexDirection: "column",
                 }}
             >
-                {currPageProducts.map((product) => (
+                {products.map((product) => (
                     <li key={product.id}>{product.title}</li>
                 ))}
             </ul>
-            <div style={{ display: "flex", flexDirection: "row" }}>
+
+            <div style={{ display: "flex", flexDirection: "row", gap: 8 }}>
                 <button
-                    onClick={() => {
-                        if (currPageNum > 0) setCurrPageNum((prev) => prev - 1);
-                    }}
-                    disabled={currPageNum === 1}
+                    onClick={() => setCurrPage((prev) => prev - 1)}
+                    disabled={currPage === 1}
                 >
                     Prev
                 </button>
-                <div>{currPageNum}</div>
+                <div>{currPage}</div>
                 <button
-                    onClick={() => {
-                        setCurrPageNum((prev) => prev + 1);
-                    }}
-                    disabled={currPageNum === totalPageNum}
+                    onClick={() => setCurrPage((prev) => prev + 1)}
+                    disabled={currPage === totalPages}
                 >
                     Next
                 </button>
