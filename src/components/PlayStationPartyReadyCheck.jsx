@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 
 const initialPlayers = [
@@ -10,10 +10,12 @@ const initialPlayers = [
 
 function PlayStationPartyReadyCheck() {
     const [players, setPlayers] = useState(initialPlayers);
-    const numReadyPlayers = players.filter((player) => player.isReady).length;
-    const canLauch = numReadyPlayers === players.length;
     const [countDown, setCountDown] = useState(5);
+
+    const numReadyPlayers = players.filter((player) => player.isReady).length;
+    const canLaunch = numReadyPlayers === players.length;
     const countDownCompleted = countDown === 0;
+
     const toggleReady = (playerId) => {
         setPlayers((prev) =>
             prev.map((player) => {
@@ -23,28 +25,33 @@ function PlayStationPartyReadyCheck() {
                 return player;
             }),
         );
+
         setCountDown(5);
     };
 
     useEffect(() => {
-        if (!canLauch || countDown <= 0) {
+        if (!canLaunch || countDown <= 0) {
             return;
         }
-        const timerId = setTimeout(
-            () => setCountDown((prev) => prev - 1),
-            1000,
-        );
+
+        const timerId = setTimeout(() => {
+            setCountDown((prev) => prev - 1);
+        }, 1000);
+
         return () => clearTimeout(timerId);
-    }, [canLauch, countDown]);
+    }, [canLaunch, countDown]);
+
     return (
         <div>
             <p>Total Number of Players: {players.length}</p>
             <p>Number of Ready Players: {numReadyPlayers}</p>
-            <p>{canLauch ? "Can launch" : "Waiting for players"}</p>
-            {canLauch && !countDownCompleted && (
+            <p>{canLaunch ? "Can launch" : "Waiting for players"}</p>
+
+            {canLaunch && !countDownCompleted && (
                 <p>Launching in {countDown}...</p>
             )}
             {countDownCompleted && <p>Match launched!</p>}
+
             <ul>
                 {players.map((player) => (
                     <li key={player.id}>
